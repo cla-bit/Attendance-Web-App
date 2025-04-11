@@ -1,10 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
 
-</body>
-</html>
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="text-center">Create an Account</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.username|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.password1|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.password2|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3 mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Account Type</h6>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="is_lecturer" id="lecturer" value="true">
+                                <label class="form-check-label" for="lecturer">Lecturer</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="is_student" id="student" value="true">
+                                <label class="form-check-label" for="student">Student</label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Select one account type</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+                <div class="mt-3 text-center">
+                    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure only one account type is selected
+        const lecturerRadio = document.querySelector('input[name="is_lecturer"]');
+        const studentRadio = document.querySelector('input[name="is_student"]');
+        
+        lecturerRadio.addEventListener('change', function() {
+            if (this.checked) {
+                studentRadio.checked = false;
+            }
+        });
+        
+        studentRadio.addEventListener('change', function() {
+            if (this.checked) {
+                lecturerRadio.checked = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
