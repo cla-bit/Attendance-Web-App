@@ -15,7 +15,7 @@ from io import StringIO
 import uuid
 
 def home(request):
-    return render(request, 'attendance/home.html')
+    return render(request, 'home.html')
 
 def user_login(request):
     if request.method == 'POST':
@@ -29,7 +29,7 @@ def user_login(request):
                 return redirect('student_dashboard')
     else:
         form = AuthenticationForm()
-    return render(request, 'attendance/registration/login.html', {'form': form})
+    return render(request, 'login.html', {'form': form})
 
 def user_logout(request):
     logout(request)
@@ -58,7 +58,7 @@ def register(request):
                 return redirect('student_profile')
     else:
         form = UserRegisterForm()
-    return render(request, 'attendance/registration/register.html', {'form': form})
+    return render(request, 'register.html', {'form': form})
 
 @login_required
 def lecturer_profile(request):
@@ -75,7 +75,7 @@ def lecturer_profile(request):
     else:
         form = LecturerProfileForm(instance=lecturer)
 
-    return render(request, 'attendance/lecturer/profile.html', {'form': form})
+    return render(request, 'lecturer_profile.html', {'form': form})
 
 @login_required
 def student_profile(request):
@@ -92,7 +92,7 @@ def student_profile(request):
     else:
         form = StudentProfileForm(instance=student)
 
-    return render(request, 'attendance/student/profile.html', {'form': form})
+    return render(request, 'student_profile.html', {'form': form})
 
 # Lecturer Views
 @login_required
@@ -109,7 +109,7 @@ def lecturer_dashboard(request):
         'courses': courses,
         'recent_sessions': recent_sessions,
     }
-    return render(request, 'attendance/lecturer/dashboard.html', context)
+    return render(request, 'lecturer_dashboard.html', context)
 
 @login_required
 def create_course(request):
@@ -126,7 +126,7 @@ def create_course(request):
     else:
         form = CourseForm()
 
-    return render(request, 'attendance/lecturer/create_course.html', {'form': form})
+    return render(request, 'lecturer_create_course.html', {'form': form})
 
 @login_required
 def generate_qr(request):
@@ -143,7 +143,7 @@ def generate_qr(request):
     else:
         form = ClassSessionForm(lecturer=lecturer)
 
-    return render(request, 'attendance/lecturer/generate_qr.html', {'form': form})
+    return render(request, 'lecturer_generate_qr.html', {'form': form})
 
 @login_required
 def view_qr(request, session_id):
@@ -151,7 +151,7 @@ def view_qr(request, session_id):
         return redirect('home')
 
     class_session = get_object_or_404(ClassSession, id=session_id, course__lecturer=request.user.lecturer)
-    return render(request, 'attendance/lecturer/view_qr.html', {'class_session': class_session})
+    return render(request, 'lecturer_view_qr.html', {'class_session': class_session})
 
 @login_required
 def attendance_summary(request, course_id=None):
@@ -205,7 +205,7 @@ def attendance_summary(request, course_id=None):
         'sessions': sessions,
         'attendance_data': attendance_data,
     }
-    return render(request, 'attendance/lecturer/attendance_summary.html', context)
+    return render(request, 'lecturer_attendance_summary.html', context)
 
 @login_required
 def download_attendance(request, course_id):
@@ -263,7 +263,7 @@ def student_dashboard(request):
         'student': student,
         'recent_attendances': recent_attendances,
     }
-    return render(request, 'attendance/student/dashboard.html', context)
+    return render(request, 'student_dashboard.html', context)
 
 @login_required
 def scan_qr(request):
@@ -271,7 +271,7 @@ def scan_qr(request):
         return redirect('home')
 
     form = QRScanForm()
-    return render(request, 'attendance/student/scan_qr.html', {'form': form})
+    return render(request, 'student_scan_qr.html', {'form': form})
 
 @login_required
 def mark_attendance(request, qr_code_id):
@@ -327,4 +327,4 @@ def student_attendance_summary(request):
         'student': student,
         'courses': courses,
     }
-    return render(request, 'attendance/student/attendance_summary.html', context)
+    return render(request, 'student_attendance_summary.html', context)

@@ -127,7 +127,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
-AUTH_USER_MODEL = 'attendance.User'
+AUTH_USER_MODEL = 'class.User'
 
 # Login URLs
 LOGIN_URL = 'login'
