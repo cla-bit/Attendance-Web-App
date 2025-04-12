@@ -1,10 +1,10 @@
-```markdown
 # Django Project Setup Guide
 
 ## Instructions
 
 ### 1. Download the Project from GitHub Repository
 Clone the repository to your local machine using the following command:
+
 ```bash
 git clone <repository_url>
 ```
@@ -63,4 +63,3 @@ Verify that the dummy data appears correctly in both the student and lecturer da
 - If you encounter any issues, check the project's documentation or seek help from the community.
 
 Feel free to reach out if you have any questions or need further assistance!
-```
