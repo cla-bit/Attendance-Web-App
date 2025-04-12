@@ -1,10 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Lecturer Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <img src="https://via.placeholder.com/150" alt="Profile" class="rounded-circle mb-3" width="100">
+                <h5 class="card-title">Full Name: {{ lecturer.user.get_full_name }}</h5>
+                <p class="text-muted">Department: {{ lecturer.department }}</p>
+                <a href="#" class="btn btn-outline-primary">Edit Profile</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{% url 'generate_qr' %}" class="btn btn-primary me-md-2">
+                        Generate QR Code
+                    </a>
+                    <a href="{% url 'create_course' %}" class="btn btn-outline-secondary">
+                        Create Course
+                    </a>
+                    <a href="{% url 'attendance_summary' %}" class="btn btn-outline-secondary">
+                        View Attendance
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Recent Sessions</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                    <div class="list-group">
+                        {% for session in recent_sessions %}
+                            <a href="{% url 'view_qr' session.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ session.course }}</h6>
+                                    <small>{{ session.date }}</small>
+                                </div>
+                                <p class="mb-1">{{ session.start_time }} - {{ session.end_time }}</p>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No recent sessions found.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Your Courses</h5>
+            </div>
+            <div class="card-body">
+                {% if courses %}
+                    <div class="list-group">
+                        {% for course in courses %}
+                            <a href="{% url 'attendance_summary_course' course.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ course.code }} - {{ course.title }}</h6>
+                                    <small>{{ course.semester }}</small>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No courses found. <a href="{% url 'create_course' %}">Create a course</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

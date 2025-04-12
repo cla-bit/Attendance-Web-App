@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from .models import User, Lecturer, Student, Course, ClassSession, Attendance
 from .forms import (
-    UserRegisterForm, LecturerProfileForm, StudentProfileForm,
+    CustomAuthenticationForm, LecturerProfileForm, StudentProfileForm,
     CourseForm, ClassSessionForm, QRScanForm
 )
 import csv
@@ -19,46 +21,26 @@ def home(request):
 
 def user_login(request):
     if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            if user.is_lecturer:
-                return redirect('lecturer_dashboard')
-            elif user.is_student:
-                return redirect('student_dashboard')
+            identifier = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, identifier=identifier, password=password)
+
+            if user is not None:
+                login(request, user)
+                if user.is_lecturer:
+                    return redirect('lecturer_dashboard')
+                elif user.is_student:
+                    return redirect('student_dashboard')
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     return render(request, 'login.html', {'form': form})
 
 def user_logout(request):
     logout(request)
     return redirect('home')
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-
-            # Create profile based on user type
-            if form.cleaned_data.get('is_lecturer'):
-                Lecturer.objects.create(user=user)
-                user.is_lecturer = True
-            elif form.cleaned_data.get('is_student'):
-                Student.objects.create(user=user)
-                user.is_student = True
-
-            user.save()
-            login(request, user)
-
-            if user.is_lecturer:
-                return redirect('lecturer_profile')
-            elif user.is_student:
-                return redirect('student_profile')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'register.html', {'form': form})
 
 @login_required
 def lecturer_profile(request):
@@ -273,27 +255,80 @@ def scan_qr(request):
     form = QRScanForm()
     return render(request, 'student_scan_qr.html', {'form': form})
 
+# @login_required
+# def mark_attendance(request, qr_code_id):
+#     if not request.user.is_student:
+#         return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+#
+#     try:
+#         qr_code_uuid = uuid.UUID(qr_code_id)
+#         class_session = ClassSession.objects.get(qr_code_id=qr_code_uuid, is_active=True)
+#     except (ValueError, ClassSession.DoesNotExist):
+#         return JsonResponse({'success': False, 'message': 'Invalid QR code or session expired'}, status=400)
+#
+#     student = request.user.student
+#
+#     # Check if student is already marked for this session
+#     if Attendance.objects.filter(student=student, class_session=class_session).exists():
+#         return JsonResponse({'success': False, 'message': 'Attendance already marked'}, status=400)
+#
+#     # Create attendance record
+#     Attendance.objects.create(student=student, class_session=class_session)
+#
+#     return JsonResponse({'success': True, 'message': 'Attendance marked successfully'})
+
 @login_required
+@require_POST
 def mark_attendance(request, qr_code_id):
     if not request.user.is_student:
-        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+        return JsonResponse({
+            'success': False,
+            'message': 'Only students can mark attendance'
+        }, status=403)
 
     try:
-        qr_code_uuid = uuid.UUID(qr_code_id)
-        class_session = ClassSession.objects.get(qr_code_id=qr_code_uuid, is_active=True)
-    except (ValueError, ClassSession.DoesNotExist):
-        return JsonResponse({'success': False, 'message': 'Invalid QR code or session expired'}, status=400)
+        # Validate UUID format
+        uuid.UUID(qr_code_id)
 
-    student = request.user.student
+        class_session = get_object_or_404(
+            ClassSession,
+            qr_code_id=qr_code_id,
+            is_active=True
+        )
 
-    # Check if student is already marked for this session
-    if Attendance.objects.filter(student=student, class_session=class_session).exists():
-        return JsonResponse({'success': False, 'message': 'Attendance already marked'}, status=400)
+        student = request.user.student
 
-    # Create attendance record
-    Attendance.objects.create(student=student, class_session=class_session)
+        # Check if attendance already exists
+        if Attendance.objects.filter(
+                student=student,
+                class_session=class_session
+        ).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'Attendance already marked for this session'
+            })
 
-    return JsonResponse({'success': True, 'message': 'Attendance marked successfully'})
+        # Create attendance record
+        Attendance.objects.create(
+            student=student,
+            class_session=class_session
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Attendance marked successfully'
+        })
+
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid QR code'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
 
 @login_required
 def student_attendance_summary(request):

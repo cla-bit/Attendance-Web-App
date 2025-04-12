@@ -37,8 +37,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "class.apps.ClassConfig"
+    "class.apps.ClassConfig",
+    "crispy_forms",
+    "crispy_bootstrap5"
 ]
+
+# Crispy Forms (optional)
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -132,3 +138,6 @@ AUTH_USER_MODEL = 'class.User'
 # Login URLs
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
+
+# QR Code settings
+SITE_URL = 'http://localhost:8000'

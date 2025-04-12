@@ -3,16 +3,15 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, Lecturer, Student, Course, ClassSession
 
 
-class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
-    is_lecturer = forms.BooleanField(required=False)
-    is_student = forms.BooleanField(required=False)
+class CustomAuthenticationForm(AuthenticationForm):
+    username = forms.CharField(label='ID Number')
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2', 'is_lecturer', 'is_student']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Matric/Lecturer Number'
+        self.fields['username'].widget.attrs.update({'placeholder': 'Enter your matric/lecturer number'})
+        self.fields['password'].widget.attrs.update({'placeholder': 'Enter your password'})
+
 
 class LecturerProfileForm(forms.ModelForm):
     class Meta:

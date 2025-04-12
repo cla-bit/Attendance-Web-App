@@ -2,9 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Web Application</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .login-button {
+            padding: 15px 30px;
+            font-size: 16px;
+            color: blue;
+            background-color: #ffff00;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-button:hover {
+            background-color: white;
+        }
+    </style>
 </head>
 <body>
-
+    <a href="{% url 'login' %}" class="login-button">Login to your account</a>
 </body>
-</html>
+</ basic styling to center the button on the page and make it visually appealing. You can further customize the styles and functionality as needed. Let me know if you need any additional features or modifications!

@@ -1,10 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Scan QR Code{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Scan QR Code</h4>
+            </div>
+            <div class="card-body text-center">
+                <div id="qr-scanner" class="mb-4" style="width: 100%; max-width: 400px; margin: 0 auto;">
+                    <video id="qr-video" width="100%" style="border: 1px solid #ddd;"></video>
+                </div>
+
+                <div id="qr-result" class="alert" style="display: none;"></div>
+
+                <form id="qr-form" method="post" style="display: none;">
+                    {% csrf_token %}
+                    {{ form.qr_code }}
+                    <button type="submit" class="btn btn-primary">Mark Attendance</button>
+                </form>
+
+                <div class="mt-4">
+                    <button id="start-scanner" class="btn btn-primary">Start Scanner</button>
+                    <button id="stop-scanner" class="btn btn-danger" style="display: none;">Stop Scanner</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('qr-video');
+        const startBtn = document.getElementById('start-scanner');
+        const stopBtn = document.getElementById('stop-scanner');
+        const qrResult = document.getElementById('qr-result');
+        const qrForm = document.getElementById('qr-form');
+        const qrCodeInput = document.querySelector('#qr-form input[name="qr_code"]');
+
+        let scannerActive = false;
+        let stream = null;
+
+        startBtn.addEventListener('click', startScanner);
+        stopBtn.addEventListener('click', stopScanner);
+
+        function startScanner() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(function(s) {
+                    stream = s;
+                    video.srcObject = stream;
+                    video.play();
+
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    scannerActive = true;
+
+                    requestAnimationFrame(scanQR);
+                })
+                .catch(function(err) {
+                    console.error("Error accessing camera: ", err);
+                    qrResult.textContent = "Error accessing camera. Please ensure you have granted camera permissions.";
+                    qrResult.className = "alert alert-danger";
+                    qrResult.style.display = "block";
+                });
+        }
+
+        function stopScanner() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                scannerActive = false;
+
+                startBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+
+                qrResult.style.display = 'none';
+                qrForm.style.display = 'none';
+            }
+        }
+
+        function scanQR() {
+            if (!scannerActive) return;
+
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (code) {
+                    // Extract QR code ID from URL
+                    const urlParts = code.data.split('/');
+                    const qrCodeId = urlParts[urlParts.length - 2];
+
+                    // Verify this is our QR code
+                    if (urlParts.includes('mark-attendance')) {
+                        qrResult.textContent = "QR Code detected!";
+                        qrResult.className = "alert alert-success";
+                        qrResult.style.display = "block";
+
+                        // Set the QR code value in the form
+                        qrCodeInput.value = qrCodeId;
+                        qrForm.style.display = "block";
+
+                        // Stop scanner
+                        stopScanner();
+
+                        // Automatically submit the form
+                        qrForm.addEventListener('submit', function(e) {
+                            e.preventDefault();
+
+                            fetch("{% url 'mark_attendance' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', qrCodeId), {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({})
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    qrResult.textContent = "Attendance marked successfully!";
+                                    qrResult.className = "alert alert-success";
+                                } else {
+                                    qrResult.textContent = data.message || "Error marking attendance";
+                                    qrResult.className = "alert alert-danger";
+                                }
+                            })
+                            .catch(error => {
+                                qrResult.textContent = "Error marking attendance";
+                                qrResult.className = "alert alert-danger";
+                            });
+                        });
+
+                        qrForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            }
+
+            if (scannerActive) {
+                requestAnimationFrame(scanQR);
+            }
+        }
+    });
+</script>
+{% endblock %}

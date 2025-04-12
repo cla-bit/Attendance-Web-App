@@ -1,10 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}Attendance Summary{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h5>Select Course</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'attendance_summary' %}" class="list-group-item list-group-item-action {% if not selected_course %}active{% endif %}">
+                        All Courses
+                    </a>
+                    {% for course in courses %}
+                        <a href="{% url 'attendance_summary_course' course.id %}" 
+                           class="list-group-item list-group-item-action {% if selected_course and selected_course.id == course.id %}active{% endif %}">
+                            {{ course.code }} - {{ course.title }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        {% if selected_course %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Attendance Summary for {{ selected_course }}</h5>
+                    <a href="{% url 'download_attendance' selected_course.id %}" class="btn btn-sm btn-outline-primary">
+                        Download as CSV
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if attendance_data %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Matric No.</th>
+                                        <th>Attended</th>
+                                        <th>Total</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in attendance_data %}
+                                        <tr>
+                                            <td>{{ data.student.user.get_full_name }}</td>
+                                            <td>{{ data.student.matric_number }}</td>
+                                            <td>{{ data.attended_sessions }}</td>
+                                            <td>{{ data.total_sessions }}</td>
+                                            <td>{{ data.attended_sessions|floatformat:2 }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>No attendance records found for this course.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if sessions %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Detailed Attendance by Session</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Student</th>
+                                        {% for session in sessions %}
+                                            <th>{{ session.date }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for data in attendance_data %}
+                                        <tr>
+                                            <td>{{ data.student.user.get_full_name }}</td>
+                                            {% for session_data in data.sessions %}
+                                                <td class="text-center">
+                                                    {% if session_data.attended %}
+                                                        <span class="badge bg-success">P</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">A</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>Select a course to view attendance</h5>
+                </div>
+                <div class="card-body">
+                    <p>Please select a course from the sidebar to view attendance summary.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,106 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
 
-</body>
-</html>
+{% block title %}Create New Course{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-book me-2"></i>Create New Course
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.code|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.semester|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.title|as_crispy_field }}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'lecturer_dashboard' %}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Create Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Course Creation Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <strong>Course Code:</strong> Use standard department abbreviations (e.g., CSC 401)
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Course Title:</strong> Full descriptive title of the course
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Semester:</strong> Format: Season Year (e.g., Spring 2023, Fall 2023)
+                    </li>
+                    <li class="list-group-item">
+                        Courses cannot be deleted once created, but can be marked as inactive in the admin panel
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Font Awesome for icons (if not already loaded in base template) -->
+<script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-format course code to uppercase
+    const codeField = document.getElementById('id_code');
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Semester format suggestion
+    const semesterField = document.getElementById('id_semester');
+    if (semesterField) {
+        semesterField.addEventListener('focus', function() {
+            if (!this.value) {
+                const currentDate = new Date();
+                const month = currentDate.getMonth();
+                let season = 'Spring';
+                
+                if (month >= 5 && month <= 7) {
+                    season = 'Summer';
+                } else if (month >= 8 && month <= 11) {
+                    season = 'Fall';
+                }
+                
+                this.placeholder = `e.g., ${season} ${currentDate.getFullYear()}`;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

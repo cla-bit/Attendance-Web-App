@@ -1,10 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-</body>
-</html>
+{% block title %}View QR Code{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card">
+            <div class="card-header">
+                <h4>QR Code for {{ class_session.course }} - {{ class_session.date }}</h4>
+            </div>
+            <div class="card-body">
+                <img src="{{ class_session.qr_code.url }}" alt="QR Code" class="img-fluid mb-3">
+                <p>Display this QR code for students to scan and mark attendance.</p>
+                <p>Session Time: {{ class_session.start_time }} - {{ class_session.end_time }}</p>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="{% url 'lecturer_dashboard' %}" class="btn btn-outline-secondary me-md-2">
+                        Back to Dashboard
+                    </a>
+                    <a href="{% url 'attendance_summary_course' class_session.course.id %}" class="btn btn-primary">
+                        View Attendance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
